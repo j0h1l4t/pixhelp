@@ -1,0 +1,6 @@
+# Spike harnesses (spike/capture, spike/inference) run from this same venv -
+# there are no spike-local environments or requirements files. Their imports
+# (dxcam, numpy, Pillow, winrt-*, aiohttp) are runtime deps already covered
+# by requirements.txt; any future spike-only dependency goes here.
+pytest
+ruff

@@ -1,0 +1,19 @@
+name: pixhelp_overlay
+description: Click-through, always-on-top toast overlay for pixhelp.
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  websockets: ^12.0.0
+  window_manager: ^0.4.2
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

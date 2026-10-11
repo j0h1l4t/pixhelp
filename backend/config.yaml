@@ -1,0 +1,62 @@
+# pixhelp runtime configuration — single source of truth (see specs.md §3.6).
+# Invalid or unknown keys are fatal at startup; secrets come from the
+# environment variables named below, never inlined here.
+
+heartbeat:
+  interval_s: 8.0        # fixed tick period (design range 5-10s)
+  skip_if_busy: true     # if a heartbeat is still running at tick time, skip the tick
+
+capture:
+  monitor: 0             # dxcam output_device index
+  region: null           # L,T,R,B physical pixels, or null = full screen
+  foreground_only: false # capture only the Win32 foreground window rect (privacy + perf)
+
+gate:
+  stride: 4              # 1 = full-res mean-abs-diff; 4 = [::4,::4] sample (calibrate via spike)
+  threshold_mad: 1.5     # 0-255 scale; replace with measured idle-vs-change MAD from the spike
+  hysteresis: 0.5        # flapping zone width below threshold_mad
+
+ocr:
+  downscale: 1.0         # bitmap scale before recognition, (0,1]
+  languages: ["en-GB"]   # pinned; do not rely on the OS user profile
+  detail: blocks         # blocks | lines | words (debug)
+  max_blocks: 5          # 0 = uncapped
+
+vision:
+  enabled: true          # false = text-only heartbeats (no JPEG, no image prefill)
+  jpeg_quality: 75
+  max_pixels: 1003520    # 1280x784-ish cap for the image sent to the VLM
+
+inference:
+  host: 127.0.0.1
+  port: 8080
+  threads: 4             # physical cores; prevents SMT thrash on the i7-10510U
+  context: 4096
+  server_path: null      # null = resolve llama-server.exe from LLAMA_HOME, else the pinned install
+  vision_model: null     # null = resolve Qwen3VL-2B-Instruct-Q4_K_M.gguf from the HF cache
+  vision_mmproj: null    # null = resolve mmproj-Qwen3VL-2B-Instruct-Q8_0.gguf from the HF cache
+  text_model: null       # null = resolve qwen2.5-0.5b-instruct-q4_k_m.gguf from the HF cache
+  reasoning_deadline_s: 8.0
+  degrade_after_deadlines: 3
+
+feedback:
+  min_interval_s: 30     # rate limit between toasts
+  cooldown_s: 120        # suppress an identical normalized title+body within this window
+  max_body_chars: 280
+
+ipc:
+  host: 127.0.0.1
+  port: 8765
+  token_env: PIXHELP_IPC_TOKEN   # if unset, an ephemeral token is generated at startup
+
+telemetry:
+  enabled: false         # no outbound traffic until an endpoint is configured
+  service_name: pixhelp
+  endpoint_env: OTEL_EXPORTER_OTLP_ENDPOINT
+
+logging:
+  level: INFO            # DEBUG | INFO | WARNING | ERROR
+  path: logs/pixhelp.log # single rotating file, relative to backend/
+  max_mb: 5
+  backup_count: 1        # keep pixhelp.log.1 as the only backup
+  console: true          # mirror to stderr for dev runs

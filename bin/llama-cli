@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Thin wrapper: interactive llama-cli with the pinned vision model.
+# Run from WSL; paths handed to the Windows .exe are converted via wslpath.
+set -euo pipefail
+
+# Resolve the llama.cpp install without hardcoding a username (tracked files
+# must stay privacy-clean). LLAMA_HOME (WSL path) overrides; then Windows env;
+# then a username-agnostic search under /mnt/c/Users.
+if [[ -n "${LLAMA_HOME:-}" ]]; then
+  LLAMA_HOME_WSL="$LLAMA_HOME"
+elif [[ -n "${LOCALAPPDATA:-}" ]]; then
+  LLAMA_HOME_WSL="$(wslpath -u "$LOCALAPPDATA")/llama-b11552-bin-win-cpu-x64"
+elif compgen -G "/mnt/c/Users/*/AppData/Local/llama-b11552-bin-win-cpu-x64" >/dev/null; then
+  LLAMA_HOME_WSL="$(compgen -G "/mnt/c/Users/*/AppData/Local/llama-b11552-bin-win-cpu-x64" | head -1)"
+else
+  echo "llama.cpp install not found; export LLAMA_HOME (WSL path to the install dir)" >&2
+  exit 1
+fi
+HF_ROOT="${HOME}/.cache/huggingface"
+
+MODEL="$(ls "${HF_ROOT}/hub/models--Qwen--Qwen3-VL-2B-Instruct-GGUF/snapshots/"*"/Qwen3VL-2B-Instruct-Q4_K_M.gguf" 2>/dev/null | head -1)"
+[[ -n "$MODEL" ]] || { echo "Qwen3-VL-2B GGUF not found in ${HF_ROOT}/hub" >&2; exit 1; }
+
+export HF_HOME="$(wslpath -w "${HF_ROOT}")"
+exec "$(wslpath -w "${LLAMA_HOME_WSL}/llama-cli.exe")" -m "$(wslpath -w "${MODEL}")" "$@"

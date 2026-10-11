@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+backend/env/
+backend/logs/
+*.gguf
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
